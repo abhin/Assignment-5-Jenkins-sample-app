@@ -5,8 +5,8 @@ def buildDockerImage(tag) {
         sh """
             docker build -t sampleapp:${tag} .
             echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
-            docker tag assignmentfivejekins:${tag} ${DOCKER_USER}/assignmentfivejekins:${tag}
-            docker push ${DOCKER_USER}/assignmentfivejekins:${tag}
+            docker tag sampleapp:${tag} ${DOCKER_USER}/sampleapp:${tag}
+            docker push ${DOCKER_USER}/sampleapp:${tag}
         """
     }
 }
