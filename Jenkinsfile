@@ -49,13 +49,11 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig-creds', variable: 'KUBECONFIG')]) {
-                    script {
-                        sh """
-                            sed -i "s/IMAGE_TAG/${buildTag}/g" deployment.yaml
-                            kubectl apply -f deployment.yaml
-                        """
-                    }
+                script {
+                    sh """
+                        sed -i "s/IMAGE_TAG/${buildTag}/g" deployment.yaml
+                        kubectl apply -f deployment.yaml
+                    """
                 }
             }
         }
