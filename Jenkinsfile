@@ -14,6 +14,14 @@ def buildDockerImage(tag) {
 pipeline {
     agent { label 'built_agent' }
 
+    parameters {
+        string(name: 'NAMESPACE', defaultValue: 'default', description: 'Kubernetes namespace to deploy to')
+    }
+    
+    environment {
+        NS = "${params.NAMESPACE}"
+    }
+
     stages {
         stage('Generate Tag') {
             steps {
@@ -53,7 +61,7 @@ pipeline {
                 script {
                     sh """
                         sed -i "s/IMAGE_TAG/${env.BUILD_TAG}/g" deployment.yaml
-                        kubectl apply -f deployment.yaml
+                        kubectl apply -f deployment.yaml --namespace=${NS}
                     """
                 }
             }
