@@ -60,6 +60,7 @@ pipeline {
             steps {
                 script {
                     sh """
+                        kubectl get namespace ${NS} || kubectl create namespace ${NS}
                         sed -i "s/IMAGE_TAG/${env.BUILD_TAG}/g" deployment.yaml
                         kubectl apply -f deployment.yaml --namespace=${NS}
                     """
