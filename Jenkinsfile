@@ -1,38 +1,65 @@
+def buildTag = ''
+
+def buildDockerImage(tag) {
+    withCredentials([usernamePassword(credentialsId: 'docker-credentails', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+        sh """
+            docker build -t sampleapp:${tag} .
+            echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
+            docker tag sampleapp:${tag} ${DOCKER_USER}/sampleapp:${tag}
+            docker push ${DOCKER_USER}/sampleapp:${tag}
+        """
+    }
+}
+
 pipeline {
-    agent { label 'build_agent' }
+    agent { label 'build-agent' }
 
     stages {
-        stage('Checkout Code') {
+        stage('Generate Tag') {
             steps {
-                git url: 'https://github.com/abhin/Assignment-5-Jenkins-sample-app.git', branch: 'master'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t sampleapp:${BUILD_NUMBER} .'
-            }
-        }
-
-        stage('Push to Docker Registry') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                        echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
-                        docker tag sampleapp:${BUILD_NUMBER} ${DOCKER_USER}/sampleapp:${BUILD_NUMBER}
-                        docker push ${DOCKER_USER}/sampleapp:${BUILD_NUMBER}
-                    '''
+                script {
+                    def date = new Date().format('yyyyMMdd')
+                    buildTag = "${date}.${env.BUILD_NUMBER}"
+                    currentBuild.displayName = buildTag
                 }
             }
         }
 
-        stage('Deploy to Kubernetes'){
+        stage('Use Tag') {
             steps {
+                script {
+                    echo "The build tag is: ${buildTag}"
+                }
+            }
+        }
+
+        stage('Checkout Code') {
+            steps {
+                git url: 'https://github.com/gititc778/sampleApp.git', branch: 'master'
+            }
+        }
+
+        stage('Build & Push Docker Image') {
+            steps {
+                script {
+                    buildDockerImage(buildTag)
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    input message: "Do you want to proceed with Kubernetes deployment?", ok: 'Deploy'
+                }
+
                 withCredentials([file(credentialsId: 'kubeconfig-creds', variable: 'KUBECONFIG')]) {
-                sh '''
-                    sed -i "s/IMAGE_TAG/${BUILD_NUMBER}/g" deployment.yaml
-                    kubectl apply -f deployment.yaml
-                '''
+                    script {
+                        sh """
+                            sed -i "s/IMAGE_TAG/${buildTag}/g" deployment.yaml
+                            kubectl apply -f deployment.yaml
+                        """
+                    }
                 }
             }
         }
