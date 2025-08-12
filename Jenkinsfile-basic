@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'build_agent' }
+    agent { label 'built_agent' }
 
     stages {
         stage('Checkout Code') {

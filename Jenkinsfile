@@ -12,7 +12,7 @@ def buildDockerImage(tag) {
 }
 
 pipeline {
-    agent { label 'build_agent' }
+    agent { label 'built_agent' }
 
     stages {
         stage('Generate Tag') {
