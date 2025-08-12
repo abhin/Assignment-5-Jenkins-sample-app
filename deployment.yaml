@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sampleapp-deployment  
+  name: assignmentfivejekins-deployment  
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: sampleapp
+      app: assignmentfivejekins
   template:
     metadata:
       labels:
-        app: sampleapp
+        app: assignmentfivejekins
     spec:
       containers:
-      - name: sampleapp
-        image: abhin785/sampleapp:IMAGE_TAG
+      - name: assignmentfivejekins
+        image: abhin785/assignmentfivejekins:${BUILD_TAG}
         imagePullPolicy: Always
         ports:
-        - containerPort: 5000
+        - containerPort: 9090
         env:
             - name: ASPNETCORE_URLS
               value: http://0.0.0.0:5000
@@ -27,12 +27,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: sampleapp-service
+  name: assignmentfivejekins-service
 spec:
   selector:
-    app: sampleapp
+    app: assignmentfivejekins
   ports:
     - protocol: TCP
-      port: 5000              
-      targetPort: 5000      
+      port: 9090              
+      targetPort: 9090      
   type: LoadBalancer

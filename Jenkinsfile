@@ -5,8 +5,8 @@ def buildDockerImage(tag) {
         sh """
             docker build -t sampleapp:${tag} .
             echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
-            docker tag sampleapp:${tag} ${DOCKER_USER}/sampleapp:${tag}
-            docker push ${DOCKER_USER}/sampleapp:${tag}
+            docker tag assignmentfivejekins:${tag} ${DOCKER_USER}/assignmentfivejekins:${tag}
+            docker push ${DOCKER_USER}/assignmentfivejekins:${tag}
         """
     }
 }
@@ -20,6 +20,7 @@ pipeline {
                 script {
                     def date = new Date().format('yyyyMMdd')
                     buildTag = "${date}.${env.BUILD_NUMBER}"
+                    env.BUILD_TAG = buildTag
                     currentBuild.displayName = buildTag
                 }
             }
@@ -28,21 +29,21 @@ pipeline {
         stage('Use Tag') {
             steps {
                 script {
-                    echo "The build tag is: ${buildTag}"
+                    echo "The build tag is: ${env.BUILD_TAG}"
                 }
             }
         }
 
         stage('Checkout Code') {
             steps {
-                git url: 'https://github.com/gititc778/sampleApp.git', branch: 'master'
+                git url: 'https://github.com/abhin/Assignment-5-Jenkins-sample-app.git', branch: 'master'
             }
         }
 
         stage('Build & Push Docker Image') {
             steps {
                 script {
-                    buildDockerImage(buildTag)
+                    buildDockerImage(env.BUILD_TAG)
                 }
             }
         }
@@ -51,7 +52,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        sed -i "s/IMAGE_TAG/${buildTag}/g" deployment.yaml
+                        sed -i "s/IMAGE_TAG/${env.BUILD_TAG}/g" deployment.yaml
                         kubectl apply -f deployment.yaml
                     """
                 }
